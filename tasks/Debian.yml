@@ -1,0 +1,74 @@
+---
+- name: Install dependencies
+  become: yes
+  become_method: sudo
+  apt:
+    name: "{{ item }}"
+    state: present
+    install_recommends: yes
+  with_items: "{{ haskell.dependencies.apt }}"
+
+- stat:
+    path: "{{ haskell.tmp_dir }}/haskell-platform.{{ haskell.release_year }}.{{ haskell.version }}.tar.gz"
+  register: haskell_tar_gz
+  when: ansible_os_family == "Debian"
+
+- name: Download haskell-platform
+  get_url:
+    url: "https://www.haskell.org/platform/download/{{ haskell.release_year }}.{{ haskell.version }}/haskell-platform-{{ haskell.release_year }}.{{ haskell.version }}-unknown-linux-{{ haskell.arch }}.tar.gz"
+    dest: "{{ haskell.tmp_dir }}/haskell-platform.{{ haskell.release_year }}.{{ haskell.version }}.tar.gz"
+    validate_certs: no
+  when: ansible_os_family == "Debian"
+  when: haskell_tar_gz.stat.exists == false
+  register: download_haskell_tar_gz
+
+- stat:
+    path: "{{ haskell.tmp_dir}}/usr/local/haskell"
+  register: haskell_extracted_dir
+
+- name: Extract haskell
+  become: yes
+  become_method: sudo
+  unarchive:
+    copy: no
+    dest: "{{ haskell.tmp_dir}}"
+    src:  "{{ haskell.tmp_dir }}/haskell-platform.{{ haskell.release_year }}.{{ haskell.version }}.tar.gz"
+  when: ( haskell_extracted_dir == true or (download_haskell_tar_gz.skipped or download_haskell_tar_gz.rc == 0) )
+  when: not haskell_extracted_dir.stat.isdir
+  when: ansible_os_family == "Debian"
+
+- stat:
+    path: "{{ haskell.root_dir }}/haskell"
+  register: haskell_final_dest
+
+- stat:
+    path: "{{ haskell.activate_hs_path }}"
+  register: haskell_activate_hs
+
+- name: Move files to haskell path
+  become: yes
+  become_method: sudo
+  command: "cp -R {{ haskell.tmp_dir }}/usr/local/haskell {{ haskell.root_dir }}"
+  when: (not haskell_final_dest.stat.exists) or (not haskell_activate_hs.stat.exists )
+
+- command: which cabal
+  register: cabal_cmd
+
+- command: which ghc
+  register: ghc_cmd
+
+- command: which ghci
+  register: ghci_cmd
+
+- debug:
+    msg: "{{ cabal_cmd }}"
+
+- name: Activate Haskell
+  become: yes
+  become_method: sudo
+  shell: "{{ haskell.activate_hs_path }}"
+  when: not cabal_cmd.rc == 0 or  not ghc_cmd.rc == 0 or not ghci_cmd.rc == 0
+
+- name: Updates cabal
+  command: "{{ item }}"
+  with_items: haskell.post_install_commands

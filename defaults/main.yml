@@ -1,0 +1,19 @@
+---
+haskell:
+  arch: "{{ ansible_architecture }}"
+  dependencies:
+    apt:
+      - build-essential
+      - libgmp-dev
+      - lib32z1-dev
+    yum:
+      - haskell-platform
+  release_year: "2014"
+  version: "2.0.0"
+  tmp_dir: "/tmp"
+  haskell_parent_dir: "/usr/local"
+  activate_hs_path: "/usr/local/haskell/ghc-7.8.3-x86_64/bin/activate-hs"
+  post_install_commands:
+    - cabal update
+    - cabal install cabal-install --force-reinstall
+    - cabal install ghc-mod --force-reinstall

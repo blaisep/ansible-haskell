@@ -1,0 +1,9 @@
+---
+- name: Install dependencies
+  become: yes     
+  become_method: sudo
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items: haskell.dependencies.yum
+  when: ansible_os_family == "RedHat"
