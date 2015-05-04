@@ -26,7 +26,7 @@ Example Playbook
               release_year: "2014"
               version: "2.0.0"
               tmp_dir: "/tmp"
-              haskell_parent_dir: "/usr/local"
+              parent_dir: "/usr/local"
               post_install_commands:
                 - cabal update
                 - cabal install cabal-install --force-reinstall
