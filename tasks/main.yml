@@ -1,8 +1,6 @@
 ---
-- name: Updates pkg_mgr
-  become: yes
-  become_method: sudo
-  action: "{{ ansible_pkg_mgr }} update_cache=yes"
-
 - include: "RedHat.yml"
+  when: ansible_os_family == "RedHat"
+
 - include: "Debian.yml"
+  when: ansible_os_family == "Debian"

@@ -35,7 +35,6 @@
     src:  "{{ haskell.tmp_dir }}/haskell-platform.{{ haskell.release_year }}.{{ haskell.version }}.tar.gz"
   when: ( haskell_extracted_dir == true or (download_haskell_tar_gz.skipped or download_haskell_tar_gz.rc == 0) )
   when: not haskell_extracted_dir.stat.isdir
-  when: ansible_os_family == "Debian"
 
 - stat:
     path: "{{ haskell.parent_dir }}/haskell"
